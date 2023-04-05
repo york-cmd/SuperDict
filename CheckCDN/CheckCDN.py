@@ -118,69 +118,71 @@ ASNS = ['10576', '10762', '11748', '131099', '132601', '133496', '134409', '1352
         '21399', '21357', '21342', '20940', '20189', '18717', '18680', '17334', '16702', '16625', '12222', '209101',
         '201585', '135429', '395747', '394536', '209242', '203898', '202623', '14789', '133877', '13335', '132892',
         '21859', '6185', '47823', '30148']
+try:
 
-with open(args.input_file) as f:
-    data = json.load(f)
+    with open(args.input_file) as f:
+        data = json.load(f)
 
-# 设置初始值
-output = {
-    'host': data['host'],
-    'a': [],
-    'cname': [],
-    'isIntranetIP': False,
-    'iscdn': False
-}
+    # 设置初始值
+    output = {
+        'host': data['host'],
+        'a': [],
+        'cname': [],
+        'isIntranetIP': False,
+        'iscdn': False
+    }
 
-# 如果 'a' 字段存在，则将 'a' 值赋值给 output['a']，否则将 output['a'] 赋值为空列表
-if 'a' in data:
-    for ip_str in data['a']:
-        # 如果存在 [xxx] 则截取 IP 地址
-        if '[' in ip_str:
-            ip_str = ip_str.split('[')[0].strip()
-        # 将 IP 地址添加到 output['a'] 列表中
-        output['a'].append(ip_str.split('/')[0])
-
-
-# 如果 'cname' 字段存在，则将 'cname' 值赋值给 output['cname']，否则将 output['cname'] 赋值为空列表
-if 'cname' in data:
-    output['cname'] = data['cname']
-
-# 如果 'a' 字段不存在或者 'a' 值为空列表，则将 output['isIntranetIP'] 设为 True
-if not output['a']:
-    output['isIntranetIP'] = True
-
-# 通过ASN判断是否是CDN
-def ipCheckCDN(ip):
-    with geoip2.database.Reader(dirpath+'/GeoLite2-ASN.mmdb') as reader:
-        # 通过ASN判断
-        try:
-            response = reader.asn(ip)
-            asn = response.autonomous_system_number
-            if str(asn) in ASNS:
-                return True
-        except Exception as e:
-            pass
-    return False
+    # 如果 'a' 字段存在，则将 'a' 值赋值给 output['a']，否则将 output['a'] 赋值为空列表
+    if 'a' in data:
+        for ip_str in data['a']:
+            # 如果存在 [xxx] 则截取 IP 地址
+            if '[' in ip_str:
+                ip_str = ip_str.split('[')[0].strip()
+            # 将 IP 地址添加到 output['a'] 列表中
+            output['a'].append(ip_str.split('/')[0])
 
 
-# 判断 IP 是否为内网 IP，如果是，则将 output['isIntranetIP'] 设为 True
-for ip_str in output['a']:
-    ip = ipaddress.ip_address(ip_str)
-    if ip.is_private or ip.is_loopback or ip.is_link_local:
+    # 如果 'cname' 字段存在，则将 'cname' 值赋值给 output['cname']，否则将 output['cname'] 赋值为空列表
+    if 'cname' in data:
+        output['cname'] = data['cname']
+
+    # 如果 'a' 字段不存在或者 'a' 值为空列表，则将 output['isIntranetIP'] 设为 True
+    if not output['a']:
         output['isIntranetIP'] = True
-    # 通过CDN的IP段判断
-    for cdn in cdns:
-        if ip in ipaddress.ip_network(cdn):
-            output['iscdn'] = True
+
     # 通过ASN判断是否是CDN
-    if ipCheckCDN(ip):
+    def ipCheckCDN(ip):
+        with geoip2.database.Reader(dirpath+'/GeoLite2-ASN.mmdb') as reader:
+            # 通过ASN判断
+            try:
+                response = reader.asn(ip)
+                asn = response.autonomous_system_number
+                if str(asn) in ASNS:
+                    return True
+            except Exception as e:
+                pass
+        return False
+
+
+    # 判断 IP 是否为内网 IP，如果是，则将 output['isIntranetIP'] 设为 True
+    for ip_str in output['a']:
+        ip = ipaddress.ip_address(ip_str)
+        if ip.is_private or ip.is_loopback or ip.is_link_local:
+            output['isIntranetIP'] = True
+        # 通过CDN的IP段判断
+        for cdn in cdns:
+            if ip in ipaddress.ip_network(cdn):
+                output['iscdn'] = True
+        # 通过ASN判断是否是CDN
+        if ipCheckCDN(ip):
+            output['iscdn'] = True
+
+    # 判断是否为 CDN，如果是，则将 output['iscdn'] 设为 True
+    if output['cname'] and 'CDN' in output['cname'][0]:
         output['iscdn'] = True
 
-# 判断是否为 CDN，如果是，则将 output['iscdn'] 设为 True
-if output['cname'] and 'CDN' in output['cname'][0]:
-    output['iscdn'] = True
-
-# 将结果写入到 out.txt 文件中
-with open(args.output_file, 'w') as f:
-    json.dump(output, f, ensure_ascii=False, indent=4)
-
+    # 将结果写入到 out.txt 文件中
+    with open(args.output_file, 'w') as f:
+        json.dump(output, f, ensure_ascii=False, indent=4)
+except Exception:
+    print("error")
