@@ -23,10 +23,8 @@ echo "var2: $var2"
 echo "var3: $var3"
 
 datetime=$var2
-# cd $dict_dir/CheckCDN
 echo  $var1 | dnsx -retry 10 -json -r 8.8.8.8,223.5.5.5,119.29.29.29,114.114.114.114,1.1.1.1,1.0.0.1 -silent | ./nali > /tmp/test.json
 python3 /root/gscan/SuperDict/CheckCDN/CheckCDN.py /tmp/test.json $datetime-out.json
 jq -r '. | select(.iscdn == false and .isIntranetIP == false) | .a[]' "$datetime-out.json" >> $var3/$datetime-not-cdn-ips.txt
 jq -r '. | select(.iscdn == false and .isIntranetIP == false) | .host' "$datetime-out.json" >> $var3/$datetime-not-cdn-domains.txt
 jq -r '. | select(.iscdn == true and .isIntranetIP == false) | .host' "$datetime-out.json" >> $var3/$datetime-cdn-domains.txt
-
