@@ -1,4 +1,4 @@
-#!/bin/bash 
+ #!/bin/bash 
 if [ "$#" -lt 1 ]; then
   echo "Error: At least three arguments are required."
   exit 1
@@ -29,3 +29,4 @@ python3 /root/gscan/SuperDict/CheckCDN/CheckCDN.py /tmp/test.json $datetime-out.
 jq -r '. | select(.iscdn == false and .isIntranetIP == false) | .a[]' "$datetime-out.json" >> $var3/$datetime-not-cdn-ips.txt
 jq -r '. | select(.iscdn == false and .isIntranetIP == false) | .host' "$datetime-out.json" >> $var3/$datetime-not-cdn-domains.txt
 jq -r '. | select(.iscdn == true and .isIntranetIP == false) | .host' "$datetime-out.json" >> $var3/$datetime-cdn-domains.txt
+
