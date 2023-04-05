@@ -18,9 +18,9 @@ if [ ! -d "$var3" ]; then
   mkdir -p $var3
 fi
 # 使用变量 var1、var2 和 var3
-echo "var1: $var1"
-echo "var2: $var2"
-echo "var3: $var3"
+#echo "var1: $var1"
+#echo "var2: $var2"
+#echo "var3: $var3"
 
 datetime=$var2
 # cd $dict_dir/CheckCDN
