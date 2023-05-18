@@ -19,10 +19,15 @@ unique_hashes = set()
 for line in lines:
     # 将 JSON 字符串转换为 Python 字典
     data = json.loads(line)
-    asn = data["asn"].get("as_number",[])
+    if "asn" in data:
+        asn = data["asn"].get("as_number", [])
+    else:
+        asn = []
+    # asn = data["asn"].get("as_number",[])
     # 提取需要计算的字段
     # body_md5 = data.get("hash", {}).get("body_md5[]", [])
     body_md5 = data["hash"]["body_md5"]
+    # asn = data["asn"]["as_number"]
     words = data.get("words", [])
     webserver = data.get("webserver", [])
     a = data.get("a", [])
