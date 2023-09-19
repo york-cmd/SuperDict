@@ -25,7 +25,7 @@ class Checker:
         results = []
         info = re.findall("<tbody><tr>(.*)</tr>", data)
         if len(info) == 0:
-            print("为找到结果")
+            print("arppiddns-未找到结果")
             return results
         for item in info[0].split("</tr>"):
             #print(item)
