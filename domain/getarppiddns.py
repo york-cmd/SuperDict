@@ -24,17 +24,18 @@ class Checker:
     def get_result(self, data):
         results = []
         info = re.findall("<tbody><tr>(.*)</tr>", data)
+        if not info:  # 检查info是否为空
+            return results  # 如果为空，直接返回空结果列表
         for item in info[0].split("</tr>"):
-            #print(item)
             try:
                 subdomain = item.split("<td>")[1].replace("</td>", "")
-                # ip = re.findall("([^>]+)</a>", item.split("<td>")[2])[0]
-                # ptype = item.split("<td>")[3].replace("</td>", "")
-                # results.append(subdomain + "," + ip + "," + ptype)
                 results.append(subdomain)
-            except:
-                pass
+            except IndexError as e:  # 捕获IndexError
+                print(f"IndexError: {e}, item: {item}")
+            except Exception as e:  # 捕获其他类型的异常
+                print(f"Error: {e}, item: {item}")
         return results
+
     def save_to_fie(self, results):
         args = self.parse_args()
         kl1 = open(args.output_file, "a+")
