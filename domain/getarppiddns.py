@@ -13,14 +13,20 @@ class Checker:
     inputQueue = queue.Queue()
     def parse_args(self):
         parser = argparse.ArgumentParser(description='Process some input and output files.')
-        parser.add_argument('-f', '--input_file', type=str, required=True, help='input file name')
+        parser.add_argument('-f', '--input_file', type=str, help='input file name')
         parser.add_argument('-o', '--output_file', type=str, required=True, help='output file name')
+        parser.add_argument('-d', '--domain', type=str, help='Single domain to check')
+
         return parser.parse_args()
     def __init__(self):
         args = self.parse_args()
-        self.leads = args.input_file
+        self.domain = args.domain  # 单个域名参数
+        self.leads = args.input_file if not self.domain else None
         self.threads = 100
-        self.length = len(list(open(self.leads,  encoding='utf-8')))
+        if self.leads:
+            self.length = len(list(open(self.leads, encoding='utf-8')))
+        else:
+            self.length = 1  # 如果是单个域名，长度设置为1
     def get_result(self, data):
         results = []
         info = re.findall("<tbody><tr>(.*)</tr>", data)
@@ -75,19 +81,38 @@ class Checker:
             if num % 100 == 0:
                 print(f"({num}\{self.length})")
             self.send(target)
-    
+        # def run_thread(self):
+    #     for x in range(int(self.threads)):
+    #         t = threading.Thread(target=self.check)
+    #         t.setDaemon(True)
+    #         t.start()
+    #     for y in open(self.leads, 'r', encoding='utf-8').readlines():
+    #         self.inputQueue.put(y.strip())
+    #         while True:
+    #             if self.inputQueue.qsize() <= 1000:
+    #                 break
+    #             else:
+    #                 time.sleep(5)
+    #     while True:
+    #         time.sleep(10)
+    #         if self.inputQueue.qsize() == 0:
+    #             break
+
     def run_thread(self):
         for x in range(int(self.threads)):
             t = threading.Thread(target=self.check)
             t.setDaemon(True)
             t.start()
-        for y in open(self.leads, 'r', encoding='utf-8').readlines():
-            self.inputQueue.put(y.strip())
-            while True:
-                if self.inputQueue.qsize() <= 1000:
-                    break
-                else:
-                    time.sleep(5)
+        if self.domain:  # 如果指定了单个域名
+            self.inputQueue.put(self.domain.strip())
+        else:  # 否则，从文件中读取域名
+            for y in open(self.leads, 'r', encoding='utf-8').readlines():
+                self.inputQueue.put(y.strip())
+                while True:
+                    if self.inputQueue.qsize() <= 1000:
+                        break
+                    else:
+                        time.sleep(5)
         while True:
             time.sleep(10)
             if self.inputQueue.qsize() == 0:
